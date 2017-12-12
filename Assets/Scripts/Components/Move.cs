@@ -54,11 +54,11 @@ public class Move : MonoBehaviour, IInputReceiver
         //}
     }
 
-    public void OnAxisInput(GameInput.Axis axis, Vector2 data)
+    public void OnAxisInput(Axis axis, Vector2 data)
     {
         _rigidBody.bodyType = (_canMove ? RigidbodyType2D.Dynamic : RigidbodyType2D.Kinematic);
 
-        if (_canMove && axis == GameInput.Axis.LStick)
+        if (_canMove && axis == Axis.LStick)
         {
             _rigidBody.bodyType = RigidbodyType2D.Dynamic;
 
@@ -69,8 +69,8 @@ public class Move : MonoBehaviour, IInputReceiver
         }
     }
 
-    public void OnButtonPressed(GameInput.Button b) { }
-    public void OnButtonHeld(GameInput.Button button, float duration) { }
-    public void OnButtonReleased(GameInput.Button b) { }
+    public void OnButtonPressed(Button b) { }
+    public void OnButtonHeld(Button button, float duration) { }
+    public void OnButtonReleased(Button b) { }
 
 }

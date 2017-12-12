@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using GameInput;
 using UnityEngine;
 
 public class PlayerSelectScreen : UIScreen

@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class TeamSizeScreen : UIScreen
 {
-    public override void ProcessButtonInput(int playerIndex, GameInput.Button b)
+    public override void ProcessButtonInput(int playerIndex, Button b)
     {
-        if (b == GameInput.Button.A)
+        if (b == Button.A)
         {
             switch (_selectedIndex)
             {

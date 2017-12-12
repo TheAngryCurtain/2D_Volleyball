@@ -5,7 +5,7 @@ using UnityEngine;
 public class Volley : MonoBehaviour, IInputReceiver
 {
     [SerializeField] private float _volleyBasePower;
-    [SerializeField] private GameInput.Button _volleyButton;
+    [SerializeField] private Button _volleyButton;
     [SerializeField] private float _spinModifier = 5f;
 
     private bool _inAir = true;
@@ -26,9 +26,9 @@ public class Volley : MonoBehaviour, IInputReceiver
         VSEventManager.Instance.RemoveListener<PlayerEvents.TouchGroundEvent>(OnPlayerTouchedGround);
     }
 
-    public void OnAxisInput(GameInput.Axis axis, Vector2 data)
+    public void OnAxisInput(Axis axis, Vector2 data)
     {
-        if (axis == GameInput.Axis.RStick)
+        if (axis == Axis.RStick)
         {
             _direction = data.normalized;
             if (_direction == Vector2.zero)
@@ -38,19 +38,19 @@ public class Volley : MonoBehaviour, IInputReceiver
 
             VSEventManager.Instance.TriggerEvent(new PlayerEvents.AimUpdateEvent(_playerID, _direction));
         }
-        else if (axis == GameInput.Axis.LTrigger)
+        else if (axis == Axis.LTrigger)
         {
             _spinDirection.x = data.x;
         }
-        else if (axis == GameInput.Axis.RTrigger)
+        else if (axis == Axis.RTrigger)
         {
             _spinDirection.y = -data.x;
         }
     }
 
-    public void OnButtonPressed(GameInput.Button b) { }
-    public void OnButtonHeld(GameInput.Button button, float duration) { }
-    public void OnButtonReleased(GameInput.Button b) { }
+    public void OnButtonPressed(Button b) { }
+    public void OnButtonHeld(Button button, float duration) { }
+    public void OnButtonReleased(Button b) { }
 
     private void OnPlayerTouchedGround(PlayerEvents.TouchGroundEvent e)
     {

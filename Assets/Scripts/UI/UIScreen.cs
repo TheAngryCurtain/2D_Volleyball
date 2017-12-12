@@ -40,7 +40,7 @@ public class UIScreen : MonoBehaviour
         SetSelected(_selectableObjects[_selectedIndex]);
     }
 
-    public virtual void ProcessButtonInput(int playerIndex, GameInput.Button b)
+    public virtual void ProcessButtonInput(int playerIndex, Button b)
     {
         // override
     }

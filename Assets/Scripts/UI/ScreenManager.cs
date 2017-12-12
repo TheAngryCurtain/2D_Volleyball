@@ -2,6 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Rewired;
+
+public enum Button
+{
+    A, B, X, Y, Back, Start, LBumper, RBumper, Guide, LStick, RStick, DPadL, DPadUp, DPadR, DPadDown
+}
+
+public enum Axis
+{
+    LStick, RStick, LTrigger, RTrigger
+}
 
 public class ScreenManager : Singleton<ScreenManager>
 {
@@ -10,7 +21,9 @@ public class ScreenManager : Singleton<ScreenManager>
     [SerializeField] private UIScreen[] _screens;
 
     private UIScreen _currentScreen;
-    private bool _inputProcessed = false;
+    private float _inputDelayTime = 0.25f;
+    private float _currentTime = 0f;
+    private const float _deadzone = 0.25f;
 
     private bool _isPaused = false;
 
@@ -18,8 +31,10 @@ public class ScreenManager : Singleton<ScreenManager>
     {
         base.Awake();
 
-        GameInput.InputController.Instance.AddAxisInputListener(OnAxisInput);
-        GameInput.InputController.Instance.AddButtonPressInputListener(OnButtonPress);
+        //GameInput.InputController.Instance.AddAxisInputListener(OnAxisInput);
+        //GameInput.InputController.Instance.AddButtonPressInputListener(OnButtonPress);
+
+        InputManager.Instance.AddInputEventDelegate(OnInputUpdate, UpdateLoopType.Update);
 
         VSEventManager.Instance.AddListener<FlowEvents.OnSceneLoadedEvent>(OnSceneLoaded);
         VSEventManager.Instance.AddListener<FlowEvents.OnScreenChangeRequestEvent>(OnScreenChangeRequested);
@@ -29,38 +44,100 @@ public class ScreenManager : Singleton<ScreenManager>
 
     public override void OnDestroy()
     {
+        InputManager.Instance.RemoveInputEventDelegate(OnInputUpdate);
+
         base.OnDestroy();
 
         VSEventManager.Instance.RemoveListener<FlowEvents.OnSceneLoadedEvent>(OnSceneLoaded);
         VSEventManager.Instance.RemoveListener<FlowEvents.OnScreenChangeRequestEvent>(OnScreenChangeRequested);
     }
 
-    private void OnAxisInput(int playerIndex, GameInput.Axis axis, Vector2 data)
+    protected virtual void OnInputUpdate(InputActionEventData data)
     {
-        if (axis == GameInput.Axis.LStick)
+        float value = 0f;
+        Vector2 axis = Vector2.zero;
+        Button b = Button.Guide; // not used
+        switch (data.actionId)
         {
-            if (data != Vector2.zero)
-            {
-                if (_currentScreen != null && !_inputProcessed)
+            case RewiredConsts.Action.Nav_Horizontal:
+                value = data.GetAxis();
+                if (Mathf.Abs(value) > _deadzone)
                 {
-                    _currentScreen.ProcessAxisInput(playerIndex, data);
-                    _inputProcessed = true;
+                    axis.x = data.GetAxis();
                 }
-            }
-            else
+                break;
+
+            case RewiredConsts.Action.Nav_Vertical:
+                value = data.GetAxis();
+                if (Mathf.Abs(value) > _deadzone)
+                {
+                    axis.y = data.GetAxis();
+                }
+                break;
+
+            case RewiredConsts.Action.Select:
+                if (data.GetButtonDown())
+                {
+                    b = Button.A;
+                }
+                break;
+
+            case RewiredConsts.Action.Cancel:
+                if (data.GetButtonDown())
+                {
+                    b = Button.B;
+                }
+                break;
+
+            case RewiredConsts.Action.Confirm:
+                if (data.GetButtonDown())
+                {
+                    b = Button.Start;
+                }
+                break;
+        }
+
+        if (axis != Vector2.zero)
+        {
+            if (_currentScreen != null && Time.time > _currentTime + _inputDelayTime)
             {
-                _inputProcessed = false;
+                _currentScreen.ProcessAxisInput(data.playerId, axis);
+                _currentTime = Time.time;
             }
+        }
+
+        if (b != Button.Guide && _currentScreen != null)
+        {
+            _currentScreen.ProcessButtonInput(data.playerId, b);
         }
     }
 
-    private void OnButtonPress(int playerIndex, GameInput.Button button)
-    {
-        if (_currentScreen != null)
-        {
-            _currentScreen.ProcessButtonInput(playerIndex, button);
-        }
-    }
+    //private void OnAxisInput(int playerIndex, GameInput.Axis axis, Vector2 data)
+    //{
+    //    if (axis == GameInput.Axis.LStick)
+    //    {
+    //        if (data != Vector2.zero)
+    //        {
+    //            if (_currentScreen != null && !_inputProcessed)
+    //            {
+    //                _currentScreen.ProcessAxisInput(playerIndex, data);
+    //                _inputProcessed = true;
+    //            }
+    //        }
+    //        else
+    //        {
+    //            _inputProcessed = false;
+    //        }
+    //    }
+    //}
+
+    //private void OnButtonPress(int playerIndex, GameInput.Button button)
+    //{
+    //    if (_currentScreen != null)
+    //    {
+    //        _currentScreen.ProcessButtonInput(playerIndex, button);
+    //    }
+    //}
 
     private void OnSceneLoaded(FlowEvents.OnSceneLoadedEvent e)
     {

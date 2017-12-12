@@ -108,7 +108,7 @@ public class AIInputReceiver : BaseInputReceiver
                 break;
         }
 
-        OnAxisInput(_playerID, GameInput.Axis.RStick, _aimLocation);
+        OnAxisInput(_playerID, Axis.RStick, _aimLocation);
     }
 
     private void UpdateMovement()
@@ -126,28 +126,28 @@ public class AIInputReceiver : BaseInputReceiver
                         float direction = Mathf.Sign(distToTarget);
                         float speedModifier = Mathf.Clamp(absoluteDistToTarget, 0f, 1f);
 
-                        OnAxisInput(_playerID, GameInput.Axis.LStick, new Vector2(direction * speedModifier, 0f));
+                        OnAxisInput(_playerID, Axis.LStick, new Vector2(direction * speedModifier, 0f));
 
                         // jump at the ball if you're closer to it than the target
                         float absoluteDistToBall = Mathf.Abs(_currentBallPos.x - transform.position.x);
                         if (absoluteDistToBall < absoluteDistToTarget && transform.position.x < _targetX && !_isJumping)
                         {
                             Debug.Log("AI JUMP");
-                            OnButtonPress(_playerID, GameInput.Button.RBumper); // jump. set up a map for common buttons across players
+                            OnButtonPress(_playerID, Button.RBumper); // jump. set up a map for common buttons across players
                             _isJumping = true;
                             _jumpTime = Time.time;
                         }
 
                         if (_isJumping)
                         {
-                            OnButtonHeld(_playerID, GameInput.Button.RBumper, (Time.time - _jumpTime));
+                            OnButtonHeld(_playerID, Button.RBumper, (Time.time - _jumpTime));
 
                             if(_jumpTime > 1f) // set up a map for common button/action variables
                             {
                                 Debug.Log("AI STOP JUMP");
                                 _isJumping = false;
                                 _jumpTime = 0f;
-                                OnButtonRelease(_playerID, GameInput.Button.RBumper);
+                                OnButtonRelease(_playerID, Button.RBumper);
                             }
                         }
                     }
@@ -166,7 +166,7 @@ public class AIInputReceiver : BaseInputReceiver
                     _hasTarget = true;
 
                     // just release it here I guess?
-                    OnButtonRelease(_playerID, GameInput.Button.A);
+                    OnButtonRelease(_playerID, Button.A);
                 }
                 break;
         }

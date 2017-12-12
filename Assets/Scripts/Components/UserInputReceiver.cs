@@ -1,27 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
-using GameInput;
 using UnityEngine;
+using Rewired;
 
 public class UserInputReceiver : BaseInputReceiver
 {
+    private Vector2 aim = Vector2.zero;
+
     protected override void OnEnable()
     {
-        InputController.Instance.AddAxisInputListener(OnAxisInput);
-        InputController.Instance.AddButtonPressInputListener(OnButtonPress);
-        InputController.Instance.AddButtonHoldInputListener(OnButtonHeld);
-        InputController.Instance.AddButtonReleaseInputListener(OnButtonRelease);
+        InputManager.Instance.AddInputEventDelegate(OnInputUpdate, UpdateLoopType.Update);
 
         base.OnEnable();
     }
 
-    protected override void OnDisable()
+    // TODO
+    // this needs serious refactoring to remove all traces of XInput (axis, button, etc)
+    protected virtual void OnInputUpdate(InputActionEventData data)
     {
-        InputController.Instance.RemoveAxisInputListener(OnAxisInput);
-        InputController.Instance.RemoveButtonPressInputListener(OnButtonPress);
-        InputController.Instance.RemoveButtonHoldInputListener(OnButtonHeld);
-        InputController.Instance.RemoveButtonReleaseInputListener(OnButtonRelease);
+        float value = 0f;
+        switch (data.actionId)
+        {
+            case RewiredConsts.Action.Move_Horizontal:
+                value = data.GetAxis();
+                if (value != 0f)
+                {
+                    OnAxisInput(data.playerId, Axis.LStick, new Vector2(value, 0f));
+                }
+                break;
 
-        base.OnDisable();
+            case RewiredConsts.Action.Aim_Horizontal:
+                aim.x = data.GetAxis();
+                OnAxisInput(data.playerId, Axis.RStick, aim);
+                break;
+
+            case RewiredConsts.Action.Aim_Vertical:
+                aim.y = data.GetAxis();
+                OnAxisInput(data.playerId, Axis.RStick, aim);
+                break;
+
+            case RewiredConsts.Action.Jump:
+                if (data.GetButtonDown())
+                {
+                    OnButtonPress(data.playerId, Button.RBumper);
+                }
+                else if (data.GetButtonUp())
+                {
+                    OnButtonRelease(data.playerId, Button.RBumper);
+                }
+                break;
+
+            case RewiredConsts.Action.Spin_Left:
+                value = data.GetAxis();
+                OnAxisInput(data.playerId, Axis.LTrigger, new Vector2(value, 0f));
+                break;
+
+            case RewiredConsts.Action.Spin_Right:
+                value = data.GetAxis();
+                OnAxisInput(data.playerId, Axis.RTrigger, new Vector2(value, 0f));
+                break;
+        }
     }
 }

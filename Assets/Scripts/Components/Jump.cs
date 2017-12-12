@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Jump : MonoBehaviour, IInputReceiver
 {
-    [SerializeField] private GameInput.Button _jumpButton;
+    [SerializeField] private Button _jumpButton;
     //[SerializeField] private float _maxHeight;
 
     [SerializeField] private float _jumpForce;
@@ -18,7 +18,7 @@ public class Jump : MonoBehaviour, IInputReceiver
         _rigidbody = GetComponent<Rigidbody2D>();
     }
 
-    public void OnButtonPressed(GameInput.Button button)
+    public void OnButtonPressed(Button button)
     {
         if (button == _jumpButton && _canJump)
         {
@@ -28,7 +28,7 @@ public class Jump : MonoBehaviour, IInputReceiver
         }
     }
 
-    public void OnButtonHeld(GameInput.Button button, float duration)
+    public void OnButtonHeld(Button button, float duration)
     {
         if (button == _jumpButton && duration < _maxJumpTime)
         {
@@ -36,7 +36,7 @@ public class Jump : MonoBehaviour, IInputReceiver
         }
     }
 
-    public void OnButtonReleased(GameInput.Button button)
+    public void OnButtonReleased(Button button)
     {
         //don't cancel the jump if falling
         if (_rigidbody.velocity.y > 0f)
@@ -45,7 +45,7 @@ public class Jump : MonoBehaviour, IInputReceiver
         }
     }
 
-    public void OnAxisInput(GameInput.Axis axis, Vector2 data) { }
+    public void OnAxisInput(Axis axis, Vector2 data) { }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
