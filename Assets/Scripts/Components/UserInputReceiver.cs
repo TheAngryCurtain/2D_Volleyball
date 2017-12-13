@@ -22,11 +22,7 @@ public class UserInputReceiver : BaseInputReceiver
         switch (data.actionId)
         {
             case RewiredConsts.Action.Move_Horizontal:
-                value = data.GetAxis();
-                if (value != 0f)
-                {
-                    OnAxisInput(data.playerId, Axis.LStick, new Vector2(value, 0f));
-                }
+                    OnAxisInput(data.playerId, Axis.LStick, new Vector2(data.GetAxis(), 0f));
                 break;
 
             case RewiredConsts.Action.Aim_Horizontal:

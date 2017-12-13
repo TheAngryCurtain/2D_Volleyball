@@ -17,9 +17,13 @@ public class AIInputReceiver : BaseInputReceiver
     private Vector2 _aimLocation;
     private Game.eGameState _currentGameState;
 
+    private float _spinDirection = 0f;
+    private Transform _opposingPlayerTransform;
+
     protected override void OnEnable()
     {
         VSEventManager.Instance.AddListener<GameEvents.GameStateChangedEvent>(OnGameStateChanged);
+        VSEventManager.Instance.AddListener<GameEvents.PlayerSpawnedEvent>(OnPlayerSpawned);
         VSEventManager.Instance.AddListener<GameEvents.BallTouchFloorEvent>(OnBallHitFloor);
         VSEventManager.Instance.AddListener<GameEvents.BallPositionUpdateEvent>(OnBallPositionUpdate);
         VSEventManager.Instance.AddListener<GameEvents.TrajectoryEndEvent>(OnTrajectoryEndFound);
@@ -30,6 +34,7 @@ public class AIInputReceiver : BaseInputReceiver
     protected override void OnDisable()
     {
         VSEventManager.Instance.RemoveListener<GameEvents.GameStateChangedEvent>(OnGameStateChanged);
+        VSEventManager.Instance.RemoveListener<GameEvents.PlayerSpawnedEvent>(OnPlayerSpawned);
         VSEventManager.Instance.RemoveListener<GameEvents.BallTouchFloorEvent>(OnBallHitFloor);
         VSEventManager.Instance.RemoveListener<GameEvents.BallPositionUpdateEvent>(OnBallPositionUpdate);
         VSEventManager.Instance.RemoveListener<GameEvents.TrajectoryEndEvent>(OnTrajectoryEndFound);
@@ -40,6 +45,11 @@ public class AIInputReceiver : BaseInputReceiver
     private void OnGameStateChanged(GameEvents.GameStateChangedEvent e)
     {
         _currentGameState = e.NewState;
+    }
+
+    private void OnPlayerSpawned(GameEvents.PlayerSpawnedEvent e)
+    {
+        _opposingPlayerTransform = e.PlayerTransform;
     }
 
     private void OnBallPositionUpdate(GameEvents.BallPositionUpdateEvent e)
@@ -73,7 +83,7 @@ public class AIInputReceiver : BaseInputReceiver
         //if (launchingTeamID != currentTeamID)
         if (onTeamSide && !isOOB)
         {
-            _targetX = e.TrajectoryEndPosition.x;
+            _targetX = e.TrajectoryEndPosition.x - 0.5f; // TODO account for side of court you're on. If you're on the right, it's -0.5, else +0.5
             _hasTarget = true;
         }
     }
@@ -87,8 +97,32 @@ public class AIInputReceiver : BaseInputReceiver
 
     private void Update()
     {
+        UpdateShotPlacement();
         UpdateAimLocation();
         UpdateMovement();
+    }
+
+    private void UpdateShotPlacement()
+    {
+        _spinDirection = 0f;
+        switch (_currentGameState)
+        {
+            case Game.eGameState.Serve:
+                _spinDirection = 0.75f; // TODO take into account the side of the court
+                break;
+
+            case Game.eGameState.Play:
+                if (_opposingPlayerTransform != null)
+                {
+                    // TODO
+                    // get the position of the player and determine whether the shot should...
+                    // have backspin (+) if the player is near the net (make sure it's not oob?)
+                    // have forward spin (-) if the player is away from the net
+                }
+                break;
+        }
+
+        OnAxisInput(_playerID, Axis.LTrigger, new Vector2(_spinDirection, 0f));
     }
 
     private void UpdateAimLocation()
@@ -96,8 +130,8 @@ public class AIInputReceiver : BaseInputReceiver
         switch (_currentGameState)
         {
             case Game.eGameState.Serve:
-                _aimLocation = Vector2.up;
-                break;
+                //_aimLocation = Vector2.up;
+                //break;
 
             case Game.eGameState.Play:
                 // TODO when strategies are figured out, adjust the length of the aimLocation to vary the power on AI shots

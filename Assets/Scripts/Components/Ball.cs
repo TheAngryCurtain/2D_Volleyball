@@ -8,10 +8,15 @@ public class Ball : MonoBehaviour
     [SerializeField] private float _playerHitDampenFactor;
 
     [SerializeField] private TrailRenderer _trail;
+    [SerializeField] private ParticleSystem _spikeParticles;
 
-    private const float BaseTrajectoryModifier = 15.25f;
-    private const float BackwardSpinTrajectoryModifier = 19.6f;
-    private const float ForwardSpinTrajectoryModifier = 12.85f;
+    [SerializeField] private float _defaultTrailTime;
+    [SerializeField] private float _spikeTrailTime;
+    [SerializeField] private Color _spikeColor;
+
+    private const float BaseTrajectoryModifier = 11.43f;
+    private const float BackwardSpinTrajectoryModifier = 14.7f;
+    private const float ForwardSpinTrajectoryModifier = 9.63f;
 
     private Rigidbody2D _rigidbody;
     private Vector3 _startPos;
@@ -59,10 +64,13 @@ public class Ball : MonoBehaviour
             _trail.enabled = false;
 
             int serveSide = e.ParamData[0];
-            _servePos = _startPos;
+            _servePos = _startPos + Vector3.up * 5f;
             _servePos.x *= (serveSide == (int)Game.eTeam.Away ? -1 : 1);
 
             transform.position = _servePos;
+
+            _rigidbody.velocity = Vector3.zero;
+            _rigidbody.angularVelocity = 0f;
 
             //HoldBall(true);
 
@@ -75,7 +83,7 @@ public class Ball : MonoBehaviour
         _rigidbody.velocity *= _netHitDampenFactor;
 
         // update trajectory
-        UpdateTrajectory(e.RelativeVelocity.normalized, _rigidbody.velocity.magnitude, 1f, Color.blue);
+        UpdateTrajectory(e.RelativeVelocity.normalized, 1f, Color.blue);
     }
 
     //private void OnPlayerHit(GameEvents.BallTouchPlayerEvent e)
@@ -88,47 +96,53 @@ public class Ball : MonoBehaviour
 
     private void OnBallVollied(PlayerEvents.BallVolliedEvent e)
     {
-        // only allow the player who is holding it to volley it
+        // effects
+        if (e.Spike)
+        {
+            _spikeParticles.Play();
+            _trail.time = _spikeTrailTime;
 
-        // NOTE: currently, the holdingID doesn't get set for AI, so they won't shoot at all
-        //if (_playerHoldingID == e.PlayerID)
-        //{
-
-            // stop all momentum, so that the shots are accurate to their aim locations
-            _rigidbody.velocity = Vector2.zero;
-            _rigidbody.angularVelocity = 0f;
-
-            // fun with trail colors
+            SetTrailColor(_spikeColor);
+        }
+        else
+        {
+            _spikeParticles.Stop();
+            _trail.time = _defaultTrailTime;
+           
             SetTrailColor(Settings.Instance.GetPlayerColor(e.PlayerID));
+        }
 
-            //HoldBall(false);
-            _rigidbody.AddForce(e.Direction * e.HoldTime * e.Power);
+        // stop all momentum, so that the shots are accurate to their aim locations
+        _rigidbody.velocity = Vector2.zero;
+        _rigidbody.angularVelocity = 0f;
 
-            // spin
-            _spinValues = e.Spins;
-            _spinModifier = e.SpinModifier;
-            _spin = _spinValues.x + _spinValues.y;
-            _rigidbody.AddTorque(_spin * _spinModifier);
+        //HoldBall(false);
+        _rigidbody.AddForce(e.Direction * e.Power);
 
-            // predict trajectory
-            float ballTravelDirection = Mathf.Sign(_rigidbody.velocity.x);
-            float magicalTrajectoryValue = BaseTrajectoryModifier;
-            Color debugColor = Color.red;
-            if (_spin * ballTravelDirection > 0f)
-            {
-                float delta = BackwardSpinTrajectoryModifier - BaseTrajectoryModifier;
-                magicalTrajectoryValue = BaseTrajectoryModifier + delta * _spin;
-                debugColor = Color.green;
-            }
-            else if (_spin * ballTravelDirection < 0f)
-            {
-                float delta = ForwardSpinTrajectoryModifier - BaseTrajectoryModifier;
-                magicalTrajectoryValue = BaseTrajectoryModifier - delta * _spin;
-                debugColor = Color.blue;
-            }
+        // spin
+        _spinValues = e.Spins;
+        _spinModifier = e.SpinModifier;
+        _spin = _spinValues.x + _spinValues.y;
+        _rigidbody.AddTorque(_spin * _spinModifier * Mathf.Sign(Vector2.Dot(Vector2.right, e.Direction)));
 
-            UpdateTrajectory(e.Direction, e.HoldTime, magicalTrajectoryValue, debugColor);
-        //}
+        // predict trajectory
+        float ballTravelDirection = Mathf.Sign(_rigidbody.velocity.x);
+        float magicalTrajectoryValue = BaseTrajectoryModifier;
+        Color debugColor = Color.red;
+        if (_spin * ballTravelDirection > 0f)
+        {
+            float delta = BackwardSpinTrajectoryModifier - BaseTrajectoryModifier;
+            magicalTrajectoryValue = BaseTrajectoryModifier + delta * _spin;
+            debugColor = Color.green;
+        }
+        else if (_spin * ballTravelDirection < 0f)
+        {
+            float delta = ForwardSpinTrajectoryModifier - BaseTrajectoryModifier;
+            magicalTrajectoryValue = BaseTrajectoryModifier - delta * _spin;
+            debugColor = Color.blue;
+        }
+
+        UpdateTrajectory(e.Direction, magicalTrajectoryValue, debugColor);
 
         _trail.enabled = true;
     }
@@ -158,9 +172,9 @@ public class Ball : MonoBehaviour
     //    }
     //}
 
-    private void UpdateTrajectory(Vector3 direction, float holdTime, float modifier, Color color)
+    private void UpdateTrajectory(Vector3 direction, float modifier, Color color)
     {
-        Vector2 endPos = Utils.FindTrajectoryEndPostion(transform.position, direction * (holdTime * modifier), color, true);
+        Vector2 endPos = Utils.FindTrajectoryEndPostion(transform.position, direction * modifier, color, true);
 
         VSEventManager.Instance.TriggerEvent(new GameEvents.TrajectoryEndEvent(endPos));
     }

@@ -53,6 +53,8 @@ public class GameManager : Singleton<GameManager>
         float playerSpawnX = LevelManager.Instance.GetOOBXForSide(Game.eTeam.Away) - 0.5f;
         float posModifier = 1f;
 
+        Transform playerTransform = null;
+
         Settings.CostumeData[] playerData = Settings.Instance.SpriteData;
         for (int i = 0; i < playerData.Length; i++)
         {
@@ -73,6 +75,7 @@ public class GameManager : Singleton<GameManager>
                 if (playerData[i].IsHuman)
                 {
                     currentPlayer = Instantiate(_userPlayerPrefab, new Vector3(playerSpawnX * posModifier * teamModifier, 0.0575f, 0f), Quaternion.identity);
+                    playerTransform = currentPlayer.transform;
                 }
                 else
                 {
@@ -89,5 +92,7 @@ public class GameManager : Singleton<GameManager>
         int bestOfSets = 1;
         int maxPointsPerSet = 25; // -1 for free play
         _currentGame = new Game(bestOfSets, maxPointsPerSet); // test number of sets
+
+        VSEventManager.Instance.TriggerEvent(new GameEvents.PlayerSpawnedEvent(playerTransform));
     }
 }

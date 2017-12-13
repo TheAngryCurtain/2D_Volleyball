@@ -5,6 +5,7 @@ using UnityEngine;
 public class Volley : MonoBehaviour, IInputReceiver
 {
     [SerializeField] private float _volleyBasePower;
+    [SerializeField] private float _spikeBoostAmount;
     [SerializeField] private Button _volleyButton;
     [SerializeField] private float _spinModifier = 5f;
 
@@ -61,10 +62,14 @@ public class Volley : MonoBehaviour, IInputReceiver
     {
         if (collision.gameObject.layer == LayerMask.NameToLayer("Ball"))
         {
-            // so by changing the length of the direction vector, this adjusts the power/range already
-            // this can be left for now
-            float holdTime = 0.75f;
-            VSEventManager.Instance.TriggerEvent(new PlayerEvents.BallVolliedEvent(_playerID, _direction, _spinDirection, _spinModifier, holdTime, _volleyBasePower));
+            float shotPower = _volleyBasePower;
+            bool isSpike = (_direction.y < 0f && _inAir);
+            if (isSpike)
+            {
+                shotPower += _spikeBoostAmount;
+            }
+
+            VSEventManager.Instance.TriggerEvent(new PlayerEvents.BallVolliedEvent(_playerID, _direction, _spinDirection, _spinModifier, shotPower, isSpike));
         }
     }
 }

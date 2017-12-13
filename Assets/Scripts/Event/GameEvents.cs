@@ -100,4 +100,14 @@ public class GameEvents
 
         }
     }
+
+    public class PlayerSpawnedEvent : VSGameEvent
+    {
+        public Transform PlayerTransform;
+
+        public PlayerSpawnedEvent(Transform player)
+        {
+            PlayerTransform = player;
+        }
+    }
 }

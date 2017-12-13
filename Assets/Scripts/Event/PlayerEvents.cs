@@ -17,18 +17,18 @@ public class PlayerEvents
     public class BallVolliedEvent : PlayerEvent
     {
         public Vector2 Direction;
-        public float HoldTime;
         public float Power;
         public Vector2 Spins;
         public float SpinModifier;
+        public bool Spike;
 
-        public BallVolliedEvent(int playerid, Vector2 dir, Vector2 spins, float spinModifier, float holdTime, float power) : base (playerid)
+        public BallVolliedEvent(int playerid, Vector2 dir, Vector2 spins, float spinModifier, float power, bool spike) : base (playerid)
         {
             Direction = dir;
-            HoldTime = holdTime;
             Power = power;
             Spins = spins;
             SpinModifier = spinModifier;
+            Spike = spike;
         }
     }
 
